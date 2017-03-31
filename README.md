@@ -63,7 +63,7 @@ There is a "test.html" page which is provided for those looking for more raw acc
 - The first is changing the "Test.URL" value in "/web/script/test.js" to the validating peer value from the previous step. 
 - The second change is in "/web/test.html". Under the button labeled "Deploy Chaincode" (roughly line 21), the value of the HTML input field with the ID of "chaincode" needs to be updated to reflect the chaincode ID from the deployment step.
 
-# 3. Run a local web server, or run the included Node.js server
+# 3. Run the web application on a local web server
 
 In order for the web-based to-do list application to work, it must be run from a web server. This server does not need to be publicly available in order for the application to function. On Mac, a common approach is to use the built-in PHP installation to run an in-place web server.
 
