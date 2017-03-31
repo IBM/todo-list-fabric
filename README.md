@@ -1,111 +1,108 @@
-# What
+# Implementing Common Transactions on IBM Blockchain
 
-Toodles is a basic to-do list manager that leverages IBM Blockchain as the data store.
+## Overview
+This project shows how to perform traditional data store transactions on IBM Blockchain. This surfaces as a web-based, to-do list application, allowing browse, read, edit, add, and delete (BREAD) operations.
 
-# Why
+IBM Blockchain is powered by the Linux Foundation Hyperledger Fabric 0.6 currently. That service is being deprecated, and will be replaced by the Hyperledger Fabric 1.0 architecture in the near future. At that point, this example will be updated to reflect migration patterns for businesses currently using the 0.6 architecture (privately or hosted on IBM Bluemix).
 
-The cryptocurrency Bitcoin is well known even outside of technology spheres of influence. Underlying Bitcoin however is Blockchain - a distributed database with some very special properties. These properties make Blockchain an ideal data store for all variety of applications, not just financial records. Toodles helps developers understand Blockchain in the context of typical (CRUD) database operations they use on a daily basis.
+The to-do list application presented here is designed to help developers understand how common transactions needed by business processes can be adapted to use Blockchain. *Blockchain != Bitcoin.* It might be said that Bitcoin is the first Blockchain application. As a distributed ledger, the distinct characteristics such as decentralization, consensus, and encryption have broad-reaching implications to many business verticals including finance, transportation, health care, and others.
 
-# Who
+![Flow](images/gitlab_container.png)
 
-Blockchain is open source, and many corporate entities have seen the value of leveraging its unique characteristics (Blockchain for business). One implementation of Blockchain is Hyperledger Fabric, which is organized and run by the Linux Foundation. Various IBM employees are involved in Hyperledger Fabric, including the technical steering committee. IBM Blockchain is an instance of Hyperledge Fabric in the cloud - running on IBM Bluemix.
+## Included Components
 
-# Where
+- IBM Blockchain
+- OpenWhisk
 
-Toodles runs on IBM Blockchain on IBM Bluemix.
+## Prerequisites
 
-# How
+Create an instance of IBM Blockchain on IBM Bluemix.
 
-IBM Blockchain on IBM Bluemix provides a safe testing area, with robust tooling, for everything from prototype applications, to large scale production. 
+If you have not provisioned services on IBM Bluemix before, please follow the Setting Up IBM Blockchain tutorial.
 
-A "block" is some amount of data. Functionally, Blockchain stores data as an array of bytes, so that data can take just about any form - an image, some JSON, a legal document, you name it. The "chain" refers to hashes that correlate to every block update. The hash of the current version of a block of data is directly dependant on the hash of the previous version. In this manner, a chain is formed - a verifiable, auditable, log of changes.
+You will also need a public GitHub repository.
 
-Toodles has three data structures represented on the Blockchain ...
+## Steps
 
-* Account
-  * Id
-  * First
-  * Last
-  * Name
-  * Password
+1. Deploy the compiled chaincode to a public GitHub repository
+2. Update the web application to map to your IBM Blockchain
+3. Run the web application on a local web server
+4. Using the to-do list application
 
-* Location
-  * Id
-  * AccountId
-  * Name
+# 1. Deploy the compiled chaincode to a public GitHub repository
 
-* Task
-  * Id
-  * AccountId
-  * Due
-  * LocationId
-  * Duration
-  * Energy
-  * Tags
-  * Notes
-  * Complete
-  * Name
-  * CreatedAt
+A compiled chaincode application is included. By placing this file in a public GitHub repository, you make it available for IBM Blockchain consumption. Once the chaincode is deployed in a public GitHub repository, log into IBM Blockchain, and navigate to the deployment screen.
 
-If we continue with the analogy of Blockchain as a distributed database, then "chaincode" is effectively a stored procedure. The difference here is that chaincode is written in Go, and can [arguably] have more substantial logic than a stored procedure. You might also hear the term "smart contract" which is a more business-oriented phrasing for chaincode.
+> Chaincode is also commonly referred to as a "smart contract" in Blockchain terminology. Chaincode is authored using the Go language. This represents the business logic of what transactions can take place on the Blockchain.
 
-The only way you can interact with the data on the Blockchain is through chaincode. Like many APIs these days, a client interaction with chaincode happens over HTTP using a JSON message. This opens access to just about any client technology. 
+![Landing page for the IBM Blockchain console.](https://raw.githubusercontent.com/IBM/todo-list-fabric/master/assets/blockchain-apis.png)
 
-There are three main API endpoints for any given chaincode. The first is to "deploy" chaincode, which expects a GitHub repository to be specified. The second is asynchronous "invoke" operations where you do not need a specific response right away, other than knowing that the service received the data, and will process it. The last is a "query" operation, where you are expecting to get a specific set of data in response to the API call (synchronous). In Blockchain terminology, "invoke" is generally used for create, update, and delete operations, while "query" would represent various read operations (by ID, search).
+When you login to the IBM Blockchain console, you will be presented with a series of menu options down the left side of the screen. To deploy chaincode from your GitHub repository to Hyperledger Fabric, select the "APIs" menu option. A selection of "Validating Peer 0" is already made for you. To the right of that selection is a URL. Place this URL where you can refer to it later.
 
-The format of the JSON message varies slightly depending on the operation, but generally looks like the following example ...
+A heading on this screen is labeled "IBM Blockchain HTTP APIs" and includes a list of sections that can be clicked on and expanded. Click on the "Chaincode" section to open it. 
 
+![Deploying chaincode using the IBM Blockchain console.](https://raw.githubusercontent.com/IBM/todo-list-fabric/master/assets/deploy-chaincode.png)
+
+Click on the "POST /chaincode" section to present the options for working directly with chaincode. In the "DeploySpec" section, click on the JSON block on the right side of the screen to populate the text area. Change the "chaincodeID" to point to the chain code in your public GitHub repository. Change the "secureContext" values to read "user_type1_0". Scroll down and click the button labeled "Try it out!" to deploy your chaincode. 
+
+![URL for validating peer, and chaincode ID for application integration.](https://raw.githubusercontent.com/IBM/todo-list-fabric/master/assets/post-deploy-values.png) 
+
+Once the operation has completed, click on the "Network" section in the menu on the left of the screen. Place the value from the first row in the "Chaincode ID" section where you can refer to it later.
+
+> ![Alternative tooling, such as Paw, for interacting with chaincode.](https://raw.githubusercontent.com/IBM/todo-list-fabric/master/assets/paw-http-tooling.png) 
+> As this operation is an HTTP operation that sends a POST with a small JSON value, you may chose to use other tooling, such as Paw, for managing, testing, and interacting with your chaincode.
+
+You have now deployed your first chaincode application onto IBM Blockchain. The next step is to place the values pertinent to your blockchain instance into the web application. This will enable the web application to communicate directly with your specific blockchain instance.
+
+# 2. Update the web application to map to your IBM Blockchain
+
+The web application places a data model abstraction over the service layer. The result is that there is only one place where the web application source code needs to be updated. In "/web/script/blockchain.js" change the "Blockchain.CHAINCODE" value to the chaincode ID value from the previous step, and the "Blockchain.URL" value to the validating peer value from the previous step. No further changes are required to use the web application.
+
+There is a "test.html" page which is provided for those looking for more raw access to the underlying chaincode invocation. That HTML page includes "/web/script/test.js" which contains the business logic. If you want to use this HTML page, you will need to update the source code in two places. 
+
+- The first is changing the "Test.URL" value in "/web/script/test.js" to the validating peer value from the previous step. 
+- The second change is in "/web/test.html". Under the button labeled "Deploy Chaincode" (roughly line 21), the value of the HTML input field with the ID of "chaincode" needs to be updated to reflect the chaincode ID from the deployment step.
+
+# 3. Run a local web server, or run the included Node.js server
+
+In order for the web-based to-do list application to work, it must be run from a web server. This server does not need to be publicly available in order for the application to function. On Mac, a common approach is to use the built-in PHP installation to run an in-place web server.
+
+At the command line, navigate to the "/web" directory. Launch the PHP web server in-place.
+
+```bash
+php -S localhost:8081
 ```
-{
-  "jsonrpc": "2.0",
-  "method": "invoke",
-  "params": {
-    "chaincodeID": "abc-123-xyz-456",
-    "ctorMsg": {
-      "function": "create_account",
-      "args": ["abc-123", "Kevin", "Hoyt", "krhoyt", "mypassword"]
-    },
-    "secureContext": "user_1",
-    "type": 1
-  },
-  "id": 1        
-}
-```
 
-The function "create_account" will map to a specific function in the chaincode. That function will be passed the "args" array of strings as values. In the case of Toodles, this then creates an account. It is not uncommon for the "args" array of strings to take a single JSON-formatted string, with that JSON content holding any various permutation of properties and values. In this respect, you can use Blockchain in a relational nature, or a NoSQL nature, depending on your preferences and application needs.
+> IBM Blockchain supports cross-origin resource sharing (CORS). The result is that the browser can communicate directly to IBM Blockchain without the need for a proxy server.
 
-The Toodles chaincode functions in a relational approach, and provides for browse, read, edit, add, delete (BREAD) for each of the given data structures.
+# 4. Using the to-do list application
 
-In the case of Toodles, a web-based interface is supplied to allow users to login to their specific accounts, and work with their specific to-do list items. Polymer 2.0 RC is used as a polyfill for the Web Components (and related) specifciations. The encapsulation of behaviors in components should make the Toodles source code approachable to any developer with an understanding of Web technologies (specifically JavaScript, and XHR/SPA approaches).
+With the web application loaded into the browser, you will first be presented with a login screen. The login dialog contains an IBM logo. Alt+Click on that logo to preload data into the blockchain. The only indication that this operation has been completed is a transaction ID in the developer console.
 
-> As IBM Blockchain supports CORS (cross-domain resource sharing) by default, the Web-based user interface makes requests directly against chaincode. Should you prefer a "serverless" approach, an OpenWhisk action is included in the repository. Alternatively, you might leverage Node.js (or other) server to proxy/massage data between clients and chaincode.
+> While not extremely verbose, transaction IDs from IBM Blockchain are presented in the developer console of the browser for every change made at the blockchain itself. It may be useful to have the developer console open when you are using the to-do list application.
 
-# What Next
+![To-do login screen](https://raw.githubusercontent.com/IBM/todo-list-fabric/master/assets/todo-authentication.png)
 
-The chaincode for Toodles is very specific for the application and its related data structures. It stands to reason however that those specifics could be abstracted away at the chaincode such that the arguments would specify which data model to edit, how, and with what values.  This would simplify the chaincode substantially, and make future database-oriented deployments as simple as using the exact same chaincode.
+There are three accounts created in the default data. In the form of username:password, those accounts are ...
 
-When it comes to database structures, a common follow-on project that generally emerges is that of scaffolding. A scaffolding project is currently in progress, and is called Fabric Composer. If you are a Go or JavaScript (Angular) professional, then you should consider getting involved.
+- krhoyt:abc123
+- abtin:abc123
+- peter:abc123
 
-# Fun Facts
+You can login with any of these accounts to browse, read, edit, add, and delete to-do items.
 
-## Due Date
+![To-do listing](https://github.com/IBM/todo-list-fabric/blob/master/assets/todo-list.png)
 
-The "Due Date" field in the task item detail allows for a broad range of input values - so much so that a calendar view is not necessary. This is accomplished using NLP (Natural Language Processing) and [Natty Date Parser](http://natty.joestelmach.com/). Terms such as "today", "tomorrow", and "one week" are all acceptable, as well anything that looks like a date such as "Apr 1", "April 1 2017", "Apr. 1, 2017".
+- To create a to-do list item, click on the red button labeled "+". Hovering over this button will present the additional button to create a "location".
+- To edit a to-do list item, click on the item you are interested in editing and modify the fields to match your desired values. There is no "save" button as all changes are immediately committed to the blockchain.
+- To delete a to-do list item, move your mouse over any item, and click on the trash can icon.
+- To forward the to-do list item to another person, move your mouse over any item and click on the arrow icon that appears. A list of other users in the system will be presented. Select a name. 
+- To logout of the application, click the icon that is a box with an arrow inside of it. This is located in the upper-righthand corner of the screen.
+- Using the above account information, log into the application again using a different account to see to-do items forwarded on to other users in the system.
 
-## Serverless
+# Troubleshooting
 
-While Natty is designed to be installed on your own server(s), there is a "Try It Out" section on the web site. Filling in the field makes an XHR (XMLHttpRequest, Ajax) request against an existing installation. CORS (Cross-Origin Resource Sharing) is not supported, so to use this service in the browser, you would need a proxy. I did not want to run another server, so I turned to an OpenWhisk Web Action. 
+The developer console in the browser is your key to troubleshooting any problems that may arise. The first place to look for errors is in checking the values of the chaincode ID and validating peer in the "/web/script/blockchain.js" file.
 
-OpenWhisk is an Apache open source project for serverless implementations. The term "serverless" is a bit of a misnomer. There is still a server involved, but you are only charged for the time your code is actually executing. OpenWisk actions can be enabled to support web interaction. Due date changes call an OpenWhisk action, which calls Natty. The resulting date is formatted and displayed.
-
-## Reset
-
-At the login screen, you can Alt+Click on the IBM logo to reset all the data. This is totally for demonstration purposes, and if you intend to put this into production, you should be sure to disable and/or remove the reset functionality. The source JSON file is "/bluemix/public/data/reset.json". You can edit this to reflect whatever data is pertinent to your audience. For example, you might want to login using an account name that reflects your Twitter account for social media purposes. 
-
-## Test
-
-There is a web page hosted at "/test.html" that gives you granular control over working with the data. This is useful for debugging purposes where you need to see more of the data than just what is pertinent to your account. You can use this to edit fields on the fly as well for demonstrations. As with the previous mentioned "Reset" functionality, you will want to remove this in a production environment.
-
-## Your Code Sucks
-
-Cool! Thanks! The initial build of Toodles took just under thirty (30) days. When I was handed the project, I knew next to nothing about Blockchain, no Go language experience (chaincode), and Polymer RC had just landed. I suspect the code reflects that. I was the sole developer for the entire stack, and there are many improvements I know I would make. If you want to make some, I would encourage you to consider getting involved.
+# License
+[Apache 2.0](LICENSE.txt)
