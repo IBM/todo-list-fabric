@@ -7,7 +7,9 @@ IBM Blockchain is powered by the Linux Foundation Hyperledger Fabric 0.6 current
 
 The to-do list application presented here is designed to help developers understand how common transactions needed by business processes can be adapted to use Blockchain. *Blockchain != Bitcoin.* It might be said that Bitcoin is the first Blockchain application. As a distributed ledger, the distinct characteristics such as decentralization, consensus, and encryption have broad-reaching implications to many business verticals including finance, transportation, health care, and others.
 
-![Flow](images/gitlab_container.png)
+![High-level architecture](https://raw.githubusercontent.com/IBM/todo-list-fabric/master/assets/todo-fabric-architecture.png)
+
+![Medium-level architecture](https://raw.githubusercontent.com/IBM/todo-list-fabric/master/assets/todo-fabric-details.png)
 
 ## Included Components
 
