@@ -177,5 +177,13 @@ class Toodles {
 
 }
 
-let model = new Model();
-let app = new Toodles();
+// Globals
+// Yeah, I know ...
+let model = null;
+let app = null;
+
+// Wait for polyfills to load
+window.addEventListener( 'WebComponentsReady', function() {
+  model = new Model();
+  app = new Toodles();  
+} );
