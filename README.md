@@ -1,3 +1,7 @@
+# OBSOLETE: This code pattern is obsolete
+
+> This repository will not be updated. We will keep the repository available for folks interested in some of the technical details. 
+
 # Implementing Common Transactions on IBM Blockchain
 
 ## Overview
